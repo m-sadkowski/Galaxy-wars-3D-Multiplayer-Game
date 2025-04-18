@@ -4,6 +4,7 @@ from settings import *
 from map import *
 from player import *
 from raycasting import *
+from object_renderer import *
 
 class Game:
     def __init__(self, client, initial_data):
@@ -17,6 +18,7 @@ class Game:
         self.player = Player(self, initial_data['pos'], initial_data['angle'])
         self.enemy = Player(self, PLAYER_2_POS if initial_data['player_id'] == 0 else PLAYER_1_POS, 0)
         self.enemy.color = 'red'
+        self.object_renderer = ObjectRenderer(self)
         self.raycasting = RayCasting(self)
 
     def update(self):
@@ -29,9 +31,10 @@ class Game:
 
     def draw(self):
         self.screen.fill('black')
-        self.map.draw()
-        self.player.draw()
-        self.enemy.draw()
+        self.object_renderer.draw()
+        # self.map.draw()
+        # self.player.draw()
+        # self.enemy.draw()
 
     def check_events(self):
         for event in pg.event.get():
