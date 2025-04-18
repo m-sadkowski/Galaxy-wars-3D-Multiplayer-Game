@@ -2,8 +2,8 @@ import pygame as pg
 import sys
 from settings import *
 from map import *
-from player import Player
-
+from player import *
+from raycasting import *
 
 class Game:
     def __init__(self, client, initial_data):
@@ -17,9 +17,11 @@ class Game:
         self.player = Player(self, initial_data['pos'], initial_data['angle'])
         self.enemy = Player(self, PLAYER_2_POS if initial_data['player_id'] == 0 else PLAYER_1_POS, 0)
         self.enemy.color = 'red'
+        self.raycasting = RayCasting(self)
 
     def update(self):
         self.player.update()
+        self.raycasting.update()
         self.send_player_data()
         pg.display.flip()
         self.delta_time = self.clock.tick(FPS)

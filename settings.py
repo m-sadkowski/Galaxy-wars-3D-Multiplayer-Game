@@ -1,3 +1,5 @@
+import math
+
 RES = WIDTH, HEIGHT = 1600, 900
 FPS = 60
 
@@ -9,3 +11,10 @@ PLAYER_ROT_SPEED = 0.002
 
 SERVER_IP = 'localhost'
 PORT = 5555
+
+FOV = math.pi / 3
+HALF_FOV = FOV / 2
+NUM_RAYS = WIDTH // 2
+HALF_NUM_RAYS = NUM_RAYS // 2
+DELTA_ANGLE = FOV / NUM_RAYS
+MAX_DEPTH = 20

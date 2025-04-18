@@ -12,7 +12,7 @@ class Server:
         self.server.bind((self.host, self.port))
         self.server.listen(2)
 
-        self.players = [{'pos': PLAYER_1_POS, 'angle': 0}, {'pos': PLAYER_2_POS, 'angle': 0}]
+        self.players = [{'pos': PLAYER_1_POS, 'angle': 0}, {'pos': PLAYER_2_POS, 'angle': 180}]
         self.lock = threading.Lock()
         self.conns = []
 
