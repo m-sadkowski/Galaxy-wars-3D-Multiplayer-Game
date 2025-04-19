@@ -4,6 +4,8 @@ from player import *
 from raycasting import *
 from object_renderer import *
 from object_handler import *
+from turret import *
+from sounds import *
 
 class Game:
     def __init__(self, client, initial_data):
@@ -21,11 +23,14 @@ class Game:
         self.object_renderer = ObjectRenderer(self)
         self.raycasting = RayCasting(self)
         self.object_handler = ObjectHandler(self)
+        self.turret = Turret(self)
+        self.sounds = Sounds(self)
 
     def update(self):
         self.player.update()
         self.raycasting.update()
         self.object_handler.update()
+        self.turret.update()
         self.send_player_data()
         pg.display.flip()
         self.delta_time = self.clock.tick(FPS)
@@ -34,6 +39,7 @@ class Game:
     def draw(self):
         # self.screen.fill('black')
         self.object_renderer.draw()
+        self.turret.draw()
         # self.map.draw()
         # self.player.draw()
         # self.enemy.draw()
@@ -44,6 +50,8 @@ class Game:
                 self.client.running = False
                 pg.quit()
                 sys.exit()
+            # Possbily will need change
+            self.player.single_fire_event(event)
 
     def send_player_data(self):
         pos = (self.player.x, self.player.y)
