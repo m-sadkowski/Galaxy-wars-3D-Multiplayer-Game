@@ -6,3 +6,5 @@ class Sounds:
         pg.mixer.init()
         self.path = 'resources/sounds/'
         self.turret = pg.mixer.Sound(self.path + 'turret.wav')
+        self.npc_damage = pg.mixer.Sound(self.path + 'npc_damage.wav')
+        self.npc_death = pg.mixer.Sound(self.path + 'npc_damage.wav')

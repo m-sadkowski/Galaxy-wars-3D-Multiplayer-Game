@@ -18,8 +18,11 @@ class Server:
 
     def handle_client(self, conn, player_id):
         try:
-            conn.send(json.dumps({'player_id': player_id, 'pos': self.players[player_id]['pos'],
-                                  'angle': self.players[player_id]['angle']}).encode())
+            conn.send(json.dumps({
+                'player_id': player_id,
+                'pos': self.players[player_id]['pos'],
+                'angle': self.players[player_id]['angle'],
+            }).encode())
             while True:
                 data = conn.recv(1024).decode()
                 if not data:
