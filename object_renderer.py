@@ -10,7 +10,7 @@ class ObjectRenderer:
         self.sky_offset = 0
 
     def draw(self):
-        # self.draw_background()
+        self.draw_background()
         self.render_game_objects()
 
     def draw_background(self):
