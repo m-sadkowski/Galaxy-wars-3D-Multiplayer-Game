@@ -9,27 +9,61 @@ class Client:
         self.host = 'localhost'
         self.port = 5555
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.connect((self.host, self.port))
-
-        initial_data = json.loads(self.client.recv(1024).decode())
-        self.player_id = initial_data['player_id']
-        self.game = Game(self, initial_data)
-
-        self.running = True
-        threading.Thread(target=self.receive_data).start()
-        self.game.run()
+        try:
+            self.client.connect((self.host, self.port))
+            initial_data = json.loads(self.client.recv(4096).decode())
+            self.player_id = initial_data['player_id']
+            self.game = Game(self, initial_data)
+            self.running = True
+            threading.Thread(target=self.receive_data).start()
+            self.game.run()
+        except Exception as e:
+            print(f"Connection error: {e}")
+            self.running = False
+            self.client.close()
 
     def receive_data(self):
         while self.running:
             try:
-                data = json.loads(self.client.recv(1024).decode())
-                self.game.update_enemy(data['pos'], data['angle'])
-            except:
+                data = json.loads(self.client.recv(4096).decode())
+                if not data:
+                    break
+                if 'enemy_pos' in data and 'enemy_angle' in data:
+                    self.game.update_enemy(data['enemy_pos'], data['enemy_angle'])
+                if 'hit' in data and data['hit']:
+                    self.game.handle_enemy_hit()
+            except json.JSONDecodeError:
+                continue
+            except Exception as e:
+                print(f"Connection error: {e}")
                 self.running = False
                 break
 
-    def send_data(self, pos, angle):
-        self.client.send(json.dumps({'pos': pos, 'angle': angle}).encode())
+    def send_data(self, pos, angle, actions=None):
+        try:
+            data = {
+                'pos': pos,
+                'angle': angle
+            }
+            if actions:
+                data['actions'] = actions
+            print(f"Sending data: {data}")
+            self.client.send(json.dumps(data).encode())
+        except Exception as e:
+            print(f"Failed to send data: {e}")
+            self.running = False
+
+    def send_hit_notification(self):
+        try:
+            data = {
+                'pos': self.game.player.pos,
+                'angle': self.game.player.angle,
+                'hit': True
+            }
+            self.client.send(json.dumps(data).encode())
+        except Exception as e:
+            print(f"Failed to send hit notification: {e}")
+            self.running = False
 
 
 if __name__ == '__main__':

@@ -8,6 +8,7 @@ from turret import *
 from sounds import *
 from enemy import *
 
+
 class Game:
     def __init__(self, client, initial_data):
         pg.init()
@@ -17,6 +18,7 @@ class Game:
         self.clock = pg.time.Clock()
         self.delta_time = 1
         self.player = Player(self, initial_data['pos'], initial_data['angle'])
+        self.player.health = initial_data['health']
         self.enemy = None
         self.map = Map(self)
         self.object_renderer = ObjectRenderer(self)
@@ -31,20 +33,44 @@ class Game:
         enemy_sprite = EnemySprite(self, pos=enemy_pos)
         self.object_handler.add_enemy(enemy_sprite)
         self.enemy = enemy_sprite
+        self.enemy.health = initial_data['health']
 
     def update_enemy(self, pos, angle):
         self.enemy.x, self.enemy.y = pos
         self.enemy.angle = angle
+
+    def handle_shot(self):
+        self.sounds.npc_damage.play()
+        self.player.health -= 10
+        if self.player.health <= 0:
+            print("You have been defeated!")
+
+    def handle_enemy_hit(self):
+        self.enemy.pain = True
+        self.enemy.health -= 10
+        if self.enemy.health <= 0:
+            self.enemy.alive = False
 
     def update(self):
         self.player.update()
         self.raycasting.update()
         self.object_handler.update()
         self.turret.update()
-        self.send_player_data()
+
+        # Send player data including any actions
+        actions = []
+        if self.player.shot:
+            actions.append({
+                'type': 'shoot',
+                'direction': self.player.angle
+            })
+            self.player.shot = False
+
+        self.client.send_data((self.player.x, self.player.y), self.player.angle, actions)
+
         pg.display.flip()
         self.delta_time = self.clock.tick(FPS)
-        pg.display.set_caption(f'{self.clock.get_fps() :.1f}')
+        pg.display.set_caption(f'{self.clock.get_fps() :.1f} - Health: {self.player.health}')
 
     def draw2d(self):
         self.screen.fill('black')
@@ -62,16 +88,10 @@ class Game:
                 self.client.running = False
                 pg.quit()
                 sys.exit()
-            # Possbily will need change
             self.player.single_fire_event(event)
-
-    def send_player_data(self):
-        pos = (self.player.x, self.player.y)
-        self.client.send_data(pos, self.player.angle)
 
     def run(self):
         while True:
             self.check_events()
             self.update()
-            # self.draw2d()
             self.draw()

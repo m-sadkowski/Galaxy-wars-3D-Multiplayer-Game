@@ -1,7 +1,7 @@
 import math
 
 # Game window
-RES = WIDTH, HEIGHT = 1600, 900
+RES = WIDTH, HEIGHT = 1366, 768
 HALF_WIDTH = WIDTH // 2
 HALF_HEIGHT = HEIGHT // 2
 FPS = 60

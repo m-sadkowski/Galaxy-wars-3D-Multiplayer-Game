@@ -10,13 +10,13 @@ class Player:
         self.color = 'green'
         self.diag_move_corr = 1 / math.sqrt(2)
         self.shot = False
+        self.health = 100
 
-    # Possbily will need change
     def single_fire_event(self, event):
         if event.type == pg.MOUSEBUTTONDOWN:
             if event.button == 1 and not self.shot and not self.game.turret.reloading:
-                self.game.sounds.turret.play()
                 self.shot = True
+                self.game.sounds.turret.play()
                 self.game.turret.reloading = True
 
     def movement(self):
