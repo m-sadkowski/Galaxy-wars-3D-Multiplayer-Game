@@ -1,11 +1,11 @@
 import sys
-from map import *
+from ready.map import *
 from player import *
-from raycasting import *
-from object_renderer import *
+from ready.raycasting import *
+from ready.object_renderer import *
 from object_handler import *
-from turret import *
-from sounds import *
+from ready.turret import *
+from ready.sounds import *
 from enemy import *
 
 
@@ -40,7 +40,7 @@ class Game:
         self.enemy.angle = angle
 
     def handle_shot(self):
-        self.sounds.npc_damage.play()
+        self.sounds.damage_sound.play()
         self.player.health -= 10
         if self.player.health <= 0:
             print("You have been defeated!")

@@ -1,5 +1,5 @@
 import os
-from settings import *
+from ready.settings import *
 import pygame as pg
 
 class ObjectRenderer:

@@ -1,4 +1,4 @@
-from settings import *
+from ready.settings import *
 import pygame as pg
 import math
 
@@ -16,7 +16,7 @@ class Player:
         if event.type == pg.MOUSEBUTTONDOWN:
             if event.button == 1 and not self.shot and not self.game.turret.reloading:
                 self.shot = True
-                self.game.sounds.turret.play()
+                self.game.sounds.shoot_sound.play()
                 self.game.turret.reloading = True
 
     def movement(self):

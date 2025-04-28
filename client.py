@@ -47,7 +47,7 @@ class Client:
             }
             if actions:
                 data['actions'] = actions
-            print(f"Sending data: {data}")
+            # print(f"Sending data: {data}")
             self.client.send(json.dumps(data).encode())
         except Exception as e:
             print(f"Failed to send data: {e}")
@@ -60,6 +60,7 @@ class Client:
                 'angle': self.game.player.angle,
                 'hit': True
             }
+            print(data)
             self.client.send(json.dumps(data).encode())
         except Exception as e:
             print(f"Failed to send hit notification: {e}")

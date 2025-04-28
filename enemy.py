@@ -67,8 +67,7 @@ class EnemySprite(AnimatedSprite):
     def check_hit_in_npc(self):
         if self.ray_cast_value and self.game.player.shot:
             if HALF_WIDTH - self.sprite_half_width < self.screen_x < HALF_WIDTH + self.sprite_half_width:
-                print("Trafienie!")
-                self.game.sounds.npc_damage.play()
+                self.game.sounds.damage_sound.play()
                 self.game.player.shot = False
                 self.pain = True
                 self.frame_counter = 0

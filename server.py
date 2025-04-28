@@ -1,7 +1,7 @@
 import socket
 import threading
 import json
-from settings import PLAYER_1_POS, PLAYER_2_POS
+from ready.settings import PLAYER_1_POS, PLAYER_2_POS
 import time
 
 
