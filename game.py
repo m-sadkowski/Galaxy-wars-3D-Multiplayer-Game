@@ -11,13 +11,14 @@ from enemy import *
 
 class Game:
     def __init__(self, client, initial_data):
+        # PyGame, screen, server data
         pg.init()
         pg.mouse.set_visible(False)
         self.client = client
         self.screen = pg.display.set_mode(RES)
         self.clock = pg.time.Clock()
         self.delta_time = 1
-
+        # Game objects - player, enemy, map etc.
         self.player = Player(self, initial_data['pos'], initial_data['angle'])
         self.player.health = initial_data['health']
         self.enemy = None
@@ -27,7 +28,10 @@ class Game:
         self.object_handler = ObjectHandler(self)
         self.turret = Turret(self)
         self.sounds = Sounds(self)
+        # Initialization of local enemy
         self.init_enemy(initial_data)
+
+        self.enemy_shot_event = False
 
     def init_enemy(self, initial_data):
         enemy_pos = PLAYER_2_POS if initial_data['player_id'] == 0 else PLAYER_1_POS
@@ -36,40 +40,40 @@ class Game:
         self.enemy = enemy_sprite
         self.enemy.health = initial_data['health']
 
-    def handle_shot(self):
-        self.sounds.damage_sound.play()
-        self.player.health -= 50
-        if self.player.health <= 0:
-            print("You have been defeated!")
-
     def handle_enemy_shot(self):
-        self.enemy.shot = True
         self.sounds.shoot_sound.play()
+        self.enemy.attack = True
+
+    def handle_enemy_hit_player(self):
+        self.sounds.damage_sound.play()
 
     def update_enemy(self, pos, angle):
         self.enemy.x, self.enemy.y = pos
         self.enemy.angle = angle
-        # Aktualizuj zdrowie przeciwnika na podstawie danych z serwera (to będzie ustawiane w receive_data)
 
-    def handle_enemy_hit(self):
-        self.player.pain = True
-        self.sounds.damage_sound.play()
-        # Animacja zostanie wywołana automatycznie przez system animacji gdy player.pain = True
+    def notify_enemy_shot(self):
+        self.enemy_shot_event = True
 
     def update(self):
         self.player.update()
+
+        if self.enemy_shot_event:
+            self.enemy.attack = True
+            self.enemy_shot_event = False
+
         self.raycasting.update()
         self.object_handler.update()
         self.turret.update()
 
         # Send player data including any actions
         actions = []
-        if self.player.shot:
+        if self.player.did_shot:
             actions.append({
                 'type': 'shoot',
                 'direction': self.player.angle
             })
-            self.player.shot = False
+            self.player.did_shot = False
+            print("Wyslal informacje o lokalnym strzale")
 
         self.client.send_data((self.player.x, self.player.y), self.player.angle, actions)
 

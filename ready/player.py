@@ -10,12 +10,15 @@ class Player:
         self.color = 'green'
         self.diag_move_corr = 1 / math.sqrt(2)
         self.shot = False
+        self.did_shot = False
         self.health = 0
 
     def single_fire_event(self, event):
         if event.type == pg.MOUSEBUTTONDOWN:
             if event.button == 1 and not self.shot and not self.game.turret.reloading:
+                print("Gracz oddal lokalny strzal")
                 self.shot = True
+                self.did_shot = True
                 self.game.sounds.shoot_sound.play()
                 self.game.turret.reloading = True
 

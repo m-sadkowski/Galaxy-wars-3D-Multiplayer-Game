@@ -47,7 +47,7 @@ class Server:
                     if 'actions' in data:
                         for action in data['actions']:
                             if action['type'] == 'shoot':
-                                self.players[player_id]['last_shot_time'] = time.time()
+                                self.players[player_id]['shot'] = True
 
                     # Process hits
                     if 'hit' in data and data['hit']:
@@ -60,13 +60,9 @@ class Server:
                         'enemy_pos': self.players[other_id]['pos'],
                         'enemy_angle': self.players[other_id]['angle'],
                         'enemy_health': self.players[other_id]['health'],
-                        'your_health': self.players[player_id]['health']
+                        'your_health': self.players[player_id]['health'],
+                        'enemy_shot': self.players[other_id].pop('shot', False)
                     }
-
-                    # Add shot information if enemy recently shot
-                    if 'last_shot_time' in self.players[other_id]:
-                        if time.time() - self.players[other_id]['last_shot_time'] < 0.5:  # 500ms
-                            response['enemy_shot'] = True
 
                     # Add hit information if player was hit
                     for hit in self.hits:
@@ -82,13 +78,9 @@ class Server:
         finally:
             conn.close()
 
-    def process_shot(self, shooter_id):
-        # Log shot for debugging
-        print(f"Player {shooter_id} fired a shot")
-
     def process_hit(self, shooter_id, target_id):
         try:
-            self.players[target_id]['health'] -= 10
+            self.players[target_id]['health'] -= 35
             self.hits.append({
                 'shooter_id': shooter_id,
                 'target_id': target_id,
