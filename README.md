@@ -57,7 +57,3 @@ If you want to propose major changes, please open an issue first to discuss what
 ## License
 
 This project is licensed under the MIT License.
-
----
-
-Chcesz, żebym też przygotował gotową sekcję z "Requirements" (np. SDL2, Python 3.x, itd.) — jeśli wiesz dokładnie, czego projekt wymaga? 🚀
