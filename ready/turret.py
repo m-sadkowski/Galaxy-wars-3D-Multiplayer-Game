@@ -1,4 +1,4 @@
-from sprite_object import *
+from ready.sprite_object import *
 
 
 class Turret(AnimatedSprite):

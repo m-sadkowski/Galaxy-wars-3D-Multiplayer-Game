@@ -1,9 +1,9 @@
 import sys
 from ready.map import *
-from player import *
+from ready.player import *
 from ready.raycasting import *
 from ready.object_renderer import *
-from object_handler import *
+from ready.object_handler import *
 from ready.turret import *
 from ready.sounds import *
 from enemy import *
@@ -17,6 +17,7 @@ class Game:
         self.screen = pg.display.set_mode(RES)
         self.clock = pg.time.Clock()
         self.delta_time = 1
+
         self.player = Player(self, initial_data['pos'], initial_data['angle'])
         self.player.health = initial_data['health']
         self.enemy = None
@@ -35,21 +36,25 @@ class Game:
         self.enemy = enemy_sprite
         self.enemy.health = initial_data['health']
 
-    def update_enemy(self, pos, angle):
-        self.enemy.x, self.enemy.y = pos
-        self.enemy.angle = angle
-
     def handle_shot(self):
         self.sounds.damage_sound.play()
-        self.player.health -= 10
+        self.player.health -= 50
         if self.player.health <= 0:
             print("You have been defeated!")
 
+    def handle_enemy_shot(self):
+        self.enemy.shot = True
+        self.sounds.shoot_sound.play()
+
+    def update_enemy(self, pos, angle):
+        self.enemy.x, self.enemy.y = pos
+        self.enemy.angle = angle
+        # Aktualizuj zdrowie przeciwnika na podstawie danych z serwera (to będzie ustawiane w receive_data)
+
     def handle_enemy_hit(self):
-        self.enemy.pain = True
-        self.enemy.health -= 10
-        if self.enemy.health <= 0:
-            self.enemy.alive = False
+        self.player.pain = True
+        self.sounds.damage_sound.play()
+        # Animacja zostanie wywołana automatycznie przez system animacji gdy player.pain = True
 
     def update(self):
         self.player.update()

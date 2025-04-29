@@ -28,10 +28,23 @@ class Client:
                 data = json.loads(self.client.recv(4096).decode())
                 if not data:
                     break
+
+                # Update enemy position and angle
                 if 'enemy_pos' in data and 'enemy_angle' in data:
                     self.game.update_enemy(data['enemy_pos'], data['enemy_angle'])
+
+                # Update health values
+                if 'enemy_health' in data:
+                    self.game.enemy.health = data['enemy_health']
+                if 'your_health' in data:
+                    self.game.player.health = data['your_health']
+                # Handle enemy shot
+                if 'enemy_shot' in data and data['enemy_shot']:
+                    self.game.handle_enemy_shot()
+                # Handle hit on player
                 if 'hit' in data and data['hit']:
                     self.game.handle_enemy_hit()
+
             except json.JSONDecodeError:
                 continue
             except Exception as e:

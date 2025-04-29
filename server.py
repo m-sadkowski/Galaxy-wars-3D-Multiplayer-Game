@@ -24,12 +24,14 @@ class Server:
     def handle_client(self, conn, player_id):
         try:
             # Send initial data
-            conn.send(json.dumps({
+            initial_data = {
                 'player_id': player_id,
                 'pos': self.players[player_id]['pos'],
                 'angle': self.players[player_id]['angle'],
-                'health': self.players[player_id]['health']
-            }).encode())
+                'health': self.players[player_id]['health'],
+                'enemy_health': self.players[1 - player_id]['health']
+            }
+            conn.send(json.dumps(initial_data).encode())
 
             while True:
                 data = conn.recv(1024).decode()
@@ -38,8 +40,6 @@ class Server:
 
                 with self.lock:
                     data = json.loads(data)
-
-                    # Update player position and angle
                     self.players[player_id]['pos'] = data['pos']
                     self.players[player_id]['angle'] = data['angle']
 
@@ -47,7 +47,7 @@ class Server:
                     if 'actions' in data:
                         for action in data['actions']:
                             if action['type'] == 'shoot':
-                                self.process_shot(player_id)
+                                self.players[player_id]['last_shot_time'] = time.time()
 
                     # Process hits
                     if 'hit' in data and data['hit']:
@@ -60,12 +60,19 @@ class Server:
                         'enemy_pos': self.players[other_id]['pos'],
                         'enemy_angle': self.players[other_id]['angle'],
                         'enemy_health': self.players[other_id]['health'],
+                        'your_health': self.players[player_id]['health']
                     }
 
-                    # Check if there are hits to notify
+                    # Add shot information if enemy recently shot
+                    if 'last_shot_time' in self.players[other_id]:
+                        if time.time() - self.players[other_id]['last_shot_time'] < 0.5:  # 500ms
+                            response['enemy_shot'] = True
+
+                    # Add hit information if player was hit
                     for hit in self.hits:
                         if hit['target_id'] == player_id:
                             response['hit'] = True
+                            break
 
                     conn.send(json.dumps(response).encode())
                     self.hits = [h for h in self.hits if h['target_id'] != player_id]
