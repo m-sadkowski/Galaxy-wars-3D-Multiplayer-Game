@@ -17,22 +17,52 @@ class EnemySprite(AnimatedSprite):
         self.damage = False
         self.attack = False
         self.ray_cast_value = False
+        self.animation_frame_counter = 0
+        self.animation_duration = 60
+        self.death_animation_complete = False
+        self.death_animation_start = False
+
+    def animate_attack(self):
+        self.animate(self.attack_images)
+        self.animation_frame_counter += 1
+        if self.animation_frame_counter >= self.animation_duration:
+            self.attack = False
+            self.animation_frame_counter = 0
+
+    def animate_damage(self):
+        self.animate(self.damage_images)
+        self.animation_frame_counter += 1
+        if self.animation_frame_counter >= self.animation_duration:
+            self.damage = False
+            self.animation_frame_counter = 0
+
+    def animate_death(self):
+        if not self.death_animation_start:
+            self.death_animation_start = True
+            self.animation_frame_counter = 0
+        if not self.death_animation_complete:
+            frame_index = min(self.animation_frame_counter // (self.animation_duration // len(self.death_images)), len(self.death_images) - 1)
+            self.image = self.death_images[frame_index]
+            self.animation_frame_counter += 1
+            if self.animation_frame_counter >= self.animation_duration:
+                self.death_animation_complete = True
+        else:
+            self.image = self.death_images[-1]
 
     def update(self):
         self.check_animation_time()
         self.get_sprite()
-
         if self.alive:
             self.ray_cast_value = self.ray_cast_player()
             self.check_hit_in_self()
             if self.damage:
-                self.animate(self.damage_images)
+                self.animate_damage()
             elif self.attack:
-                self.animate(self.attack_images)
+                self.animate_attack()
             else:
                 self.animate(self.walk_images)
         else:
-            self.animate(self.death_images)
+            self.animate_death()
 
     def check_hit_in_self(self):
         if self.ray_cast_value and self.game.player.shot:

@@ -18,7 +18,11 @@ class Game:
         self.screen = pg.display.set_mode(RES)
         self.clock = pg.time.Clock()
         self.delta_time = 1
-        # Game objects - player, enemy, map etc.
+        self.global_trigger = False
+        self.global_event = pg.USEREVENT + 0
+        pg.time.set_timer(self.global_event, 40)  # Timer dla animacji
+
+        # Reszta inicjalizacji pozostaje bez zmian...
         self.player = Player(self, initial_data['pos'], initial_data['angle'])
         self.player.health = initial_data['health']
         self.enemy = None
@@ -28,10 +32,10 @@ class Game:
         self.object_handler = ObjectHandler(self)
         self.turret = Turret(self)
         self.sounds = Sounds(self)
-        # Initialization of local enemy
-        self.init_enemy(initial_data)
 
+        self.init_enemy(initial_data)
         self.enemy_shot_event = False
+
 
     def init_enemy(self, initial_data):
         enemy_pos = PLAYER_2_POS if initial_data['player_id'] == 0 else PLAYER_1_POS
@@ -91,12 +95,16 @@ class Game:
         self.object_renderer.draw()
         self.turret.draw()
 
+
     def check_events(self):
+        self.global_trigger = False
         for event in pg.event.get():
             if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE):
                 self.client.running = False
                 pg.quit()
                 sys.exit()
+            elif event.type == self.global_event:
+                self.global_trigger = True
             self.player.single_fire_event(event)
 
     def run(self):
