@@ -10,7 +10,7 @@ class ObjectRenderer:
         self.sky_images = self.load_sky_images()
         self.current_sky_index = 0
         self.sky_offset = 0
-        self.animation_speed = 10
+        self.animation_speed = SKY_ANIMATION_SPEED
         self.frame_count = 0
 
     def draw(self):

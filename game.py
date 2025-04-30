@@ -39,11 +39,11 @@ class Game:
 
         # On-screen death effect
         self.death_effect_alpha = 0
-        self.death_effect_duration = 3000
+        self.death_effect_duration = PLAYER_DEATH_EFFECT_DURATION
         self.death_effect_start_time = 0
-        self.permanent_death_alpha = 80
-        self.death_color = (120, 20, 20)
-        self.flash_color = (255, 80, 80)
+        self.permanent_death_alpha = DEATH_SCREEN_ALPHA
+        self.death_color = DEATH_COLOR
+        self.flash_color = DEATH_FLASH_COLOR
         self.player_dead = False
 
 
@@ -106,7 +106,7 @@ class Game:
         if self.player_dead:
             # Final pulse blood effect
             pulse = abs(pg.time.get_ticks() % 2000 - 1000) / 1000
-            current_alpha = self.permanent_death_alpha + int(20 * pulse)
+            current_alpha = self.permanent_death_alpha + int(30 * pulse)
             permanent_overlay = pg.Surface(RES)
             permanent_overlay.fill(self.death_color)
             permanent_overlay.set_alpha(current_alpha)
@@ -136,6 +136,7 @@ class Game:
         self.object_renderer.draw()
         self.turret.draw()
         self.draw_death_effect()
+        # print(self.player.angle)
 
     def check_events(self):
         self.global_trigger = False

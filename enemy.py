@@ -1,4 +1,5 @@
 from ready.sprite_object import *
+from ready.settings import *
 import math
 
 
@@ -18,7 +19,7 @@ class EnemySprite(AnimatedSprite):
         self.attack = False
         self.ray_cast_value = False
         self.animation_frame_counter = 0
-        self.animation_duration = 60
+        self.animation_duration = ENEMY_DEATH_ANIMATION_DURATION
         self.death_animation_complete = False
         self.death_animation_start = False
 

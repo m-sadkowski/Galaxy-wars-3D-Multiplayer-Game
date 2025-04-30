@@ -9,7 +9,6 @@ class Turret(AnimatedSprite):
         self.reloading = False
         self.num_images = len(self.images)
         self.frame_counter = 0
-        self.damage = 50
 
     def animate_shot(self):
         if self.reloading:

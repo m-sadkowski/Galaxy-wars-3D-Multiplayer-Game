@@ -1,21 +1,21 @@
 import socket
 import threading
 import json
-from ready.settings import PLAYER_1_POS, PLAYER_2_POS
+from ready.settings import *
 import time
 
 
 class Server:
     def __init__(self):
-        self.host = 'localhost'
-        self.port = 5555
+        self.host = SERVER_IP
+        self.port = PORT
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.bind((self.host, self.port))
         self.server.listen(2)
 
         self.players = [
             {'pos': PLAYER_1_POS, 'angle': 0, 'health': 100, 'actions': []},
-            {'pos': PLAYER_2_POS, 'angle': 180, 'health': 100, 'actions': []}
+            {'pos': PLAYER_2_POS, 'angle': MAX_ANGLE / 2, 'health': 100, 'actions': []}
         ]
         self.lock = threading.Lock()
         self.conns = []

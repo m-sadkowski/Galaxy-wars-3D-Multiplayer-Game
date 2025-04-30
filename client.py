@@ -1,13 +1,14 @@
 import socket
 import json
 import threading
+from ready.settings import *
 from game import Game
 
 
 class Client:
     def __init__(self):
-        self.host = 'localhost'
-        self.port = 5555
+        self.host = SERVER_IP
+        self.port = PORT
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self.client.connect((self.host, self.port))
@@ -34,8 +35,9 @@ class Client:
                     prev_health = self.game.player.health
                     self.game.player.health = data['your_health']
                     self.game.player.alive = (data['your_health'] > 0)
-                    # Handle player death (tylko przy przejściu z żywego na martwego)
+                    # Handle player death only once
                     if prev_health > 0 >= data['your_health']:
+                        # print("Player died!")
                         self.game.handle_player_death()
                 if 'enemy_health' in data:
                     self.game.enemy.health = data['enemy_health']
