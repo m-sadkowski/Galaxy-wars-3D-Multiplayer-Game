@@ -11,7 +11,7 @@ from enemy import *
 
 class Game:
     def __init__(self, client, initial_data):
-        # PyGame, screen, server data
+        # PyGame, screen, server data init
         pg.init()
         pg.mouse.set_visible(False)
         self.client = client
@@ -20,9 +20,9 @@ class Game:
         self.delta_time = 1
         self.global_trigger = False
         self.global_event = pg.USEREVENT + 0
-        pg.time.set_timer(self.global_event, 40)  # Timer dla animacji
+        pg.time.set_timer(self.global_event, 40)  # Timer for animations
 
-        # Reszta inicjalizacji pozostaje bez zmian...
+        # Game init
         self.player = Player(self, initial_data['pos'], initial_data['angle'])
         self.player.health = initial_data['health']
         self.enemy = None
@@ -33,8 +33,18 @@ class Game:
         self.turret = Turret(self)
         self.sounds = Sounds(self)
 
+        # Enemy handling init
         self.init_enemy(initial_data)
         self.enemy_shot_event = False
+
+        # On-screen death effect
+        self.death_effect_alpha = 0
+        self.death_effect_duration = 3000
+        self.death_effect_start_time = 0
+        self.permanent_death_alpha = 80
+        self.death_color = (120, 20, 20)
+        self.flash_color = (255, 80, 80)
+        self.player_dead = False
 
 
     def init_enemy(self, initial_data):
@@ -59,6 +69,7 @@ class Game:
         self.enemy_shot_event = True
 
     def update(self):
+        self.handle_player_death()
         self.player.update()
 
         if self.enemy_shot_event:
@@ -77,7 +88,7 @@ class Game:
                 'direction': self.player.angle
             })
             self.player.did_shot = False
-            print("Wyslal informacje o lokalnym strzale")
+            # print("Player shot has been sent to server")
 
         self.client.send_data((self.player.x, self.player.y), self.player.angle, actions)
 
@@ -91,10 +102,40 @@ class Game:
         self.player.draw()
         self.enemy.draw()
 
+    def draw_death_effect(self):
+        if self.player_dead:
+            # Final pulse blood effect
+            pulse = abs(pg.time.get_ticks() % 2000 - 1000) / 1000
+            current_alpha = self.permanent_death_alpha + int(20 * pulse)
+            permanent_overlay = pg.Surface(RES)
+            permanent_overlay.fill(self.death_color)
+            permanent_overlay.set_alpha(current_alpha)
+            self.screen.blit(permanent_overlay, (0, 0))
+
+            # Blood flash
+            if self.death_effect_alpha > 0:
+                elapsed = pg.time.get_ticks() - self.death_effect_start_time
+                if elapsed < self.death_effect_duration:
+                    self.death_effect_alpha = 255 * (1 - elapsed / self.death_effect_duration)
+                else:
+                    self.death_effect_alpha = 0
+
+                flash_overlay = pg.Surface(RES)
+                flash_overlay.fill(self.flash_color)
+                flash_overlay.set_alpha(self.death_effect_alpha)
+                self.screen.blit(flash_overlay, (0, 0))
+
+    def handle_player_death(self):
+        if not self.player.alive and not self.player_dead:
+            self.sounds.death_sound.play()
+            self.death_effect_alpha = 255
+            self.death_effect_start_time = pg.time.get_ticks()
+            self.player_dead = True
+
     def draw(self):
         self.object_renderer.draw()
         self.turret.draw()
-
+        self.draw_death_effect()
 
     def check_events(self):
         self.global_trigger = False

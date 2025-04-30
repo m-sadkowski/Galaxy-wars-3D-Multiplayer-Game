@@ -12,11 +12,21 @@ class Player:
         self.shot = False
         self.did_shot = False
         self.health = 0
+        self.alive = True
+
+    def update(self):
+        if self.alive:
+            self.movement()
+            self.mouse_control()
+        else:
+            self.shot = False
+            self.did_shot = False
 
     def single_fire_event(self, event):
+        if not self.alive:
+            return
         if event.type == pg.MOUSEBUTTONDOWN:
             if event.button == 1 and not self.shot and not self.game.turret.reloading:
-                print("Gracz oddal lokalny strzal")
                 self.shot = True
                 self.did_shot = True
                 self.game.sounds.shoot_sound.play()
@@ -78,10 +88,6 @@ class Player:
         self.rel = pg.mouse.get_rel()[0]
         self.rel = max(-MOUSE_MAX_REL, min(MOUSE_MAX_REL, self.rel))
         self.angle += self.rel * MOUSE_SENSITIVITY * self.game.delta_time
-
-    def update(self):
-        self.movement()
-        self.mouse_control()
 
     @property
     def pos(self):

@@ -31,13 +31,18 @@ class Client:
                 if 'enemy_pos' in data and 'enemy_angle' in data:
                     self.game.update_enemy(data['enemy_pos'], data['enemy_angle'])
                 if 'your_health' in data:
+                    prev_health = self.game.player.health
                     self.game.player.health = data['your_health']
+                    self.game.player.alive = (data['your_health'] > 0)
+                    # Handle player death (tylko przy przejściu z żywego na martwego)
+                    if prev_health > 0 >= data['your_health']:
+                        self.game.handle_player_death()
                 if 'enemy_health' in data:
                     self.game.enemy.health = data['enemy_health']
                     self.game.enemy.alive = (data['enemy_health'] > 0)
                 if 'enemy_shot' in data:
                     if data['enemy_shot']:
-                        print("JDJDJD - Enemy shot detected!")
+                        # print("Enemy shot!")
                         self.game.notify_enemy_shot()
             except json.JSONDecodeError:
                 continue
