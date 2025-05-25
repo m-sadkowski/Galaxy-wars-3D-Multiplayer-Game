@@ -5,4 +5,7 @@
 - Handle players reconnecting
 - Main menu with settings (resolution, mouse sensitivity etc.)
 - Handle death screen (text, rematch)
-- Rewrite server to C
+
+gcc server.c cJSON.c -o server.exe -lws2_32
+python client.py
+python client.py

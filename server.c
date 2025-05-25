@@ -1,141 +1,168 @@
-#include <winsock2.h>
-#include <windows.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
+#include <winsock2.h>
+#include <process.h>
+#include <windows.h>
+#include "cJSON.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
 #define PORT 5555
 #define BUFFER_SIZE 1024
+#define MAX_CLIENTS 2
 
-// Struktura gracza
 typedef struct {
-    int x, y;
-    int angle;
+    SOCKET socket;
+    int player_id;
+} ClientArgs;
+
+typedef struct {
+    double pos[2];
+    double angle;
     int health;
-    bool shot;
+    int shot;
 } Player;
 
-Player players[2];
-HANDLE lock;
+Player players[2] = {
+    {{1.5, 5}, 0, 100, 0},
+    {{14.5, 4}, 3.1425, 100, 0}
+};
 
-void send_data(SOCKET conn, const char *data) {
-    send(conn, data, strlen(data), 0);
-}
+HANDLE mutex;
+int hits[2] = {0};
 
-void receive_data(SOCKET conn, char *buffer, int size) {
-    memset(buffer, 0, size);
-    recv(conn, buffer, size, 0);
+void send_json(SOCKET sock, cJSON *json) {
+    char *data = cJSON_PrintUnformatted(json);
+    int len = strlen(data);
+    send(sock, data, len, 0);
+    free(data);
 }
 
 void process_hit(int shooter_id, int target_id) {
+    WaitForSingleObject(mutex, INFINITE);
+    
     players[target_id].health -= 35;
-    if (players[target_id].health <= 0) {
-        printf("Player %d has been defeated by player %d!\n", target_id, shooter_id);
-    } else {
-        printf("Player %d hit player %d! Remaining health: %d\n", shooter_id, target_id, players[target_id].health);
+    hits[target_id] = 1;
+    printf("Player %d hit player %d! Health remaining: %d\n", 
+           shooter_id, target_id, players[target_id].health);
+    
+    if(players[target_id].health <= 0) {
+        printf("Player %d defeated by player %d!\n", target_id, shooter_id);
     }
+    
+    ReleaseMutex(mutex);
 }
 
-DWORD WINAPI handle_client(LPVOID param) {
-    SOCKET conn = (SOCKET)param;
-    int player_id = (conn == INVALID_SOCKET) ? -1 : (conn == players[0].socket ? 0 : 1);
+unsigned __stdcall client_handler(void *args) {
+    ClientArgs *client = (ClientArgs *)args;
+    SOCKET sock = client->socket;
+    int player_id = client->player_id;
+    int other_id = 1 - player_id;
     char buffer[BUFFER_SIZE];
+    
+    // Send initial data
+    cJSON *init_data = cJSON_CreateObject();
+    cJSON_AddNumberToObject(init_data, "player_id", player_id);
+    cJSON_AddItemToObject(init_data, "pos", cJSON_CreateDoubleArray(players[player_id].pos, 2));
+    cJSON_AddNumberToObject(init_data, "angle", players[player_id].angle);
+    cJSON_AddNumberToObject(init_data, "health", players[player_id].health);
+    cJSON_AddNumberToObject(init_data, "enemy_health", players[other_id].health);
+    send_json(sock, init_data);
+    cJSON_Delete(init_data);
 
-    // Wysłanie danych początkowych
-    sprintf(buffer, "{\"player_id\": %d, \"x\": %d, \"y\": %d, \"angle\": %d, \"health\": %d}",
-            player_id, players[player_id].x, players[player_id].y, players[player_id].angle, players[player_id].health);
-    send_data(conn, buffer);
+    while(1) {
+        int bytes = recv(sock, buffer, BUFFER_SIZE - 1, 0);
+        if(bytes <= 0) break;
+        buffer[bytes] = '\0';
 
-    while (1) {
-        receive_data(conn, buffer, BUFFER_SIZE);
-        if (strlen(buffer) == 0) {
-            break;
+        WaitForSingleObject(mutex, INFINITE);
+        
+        cJSON *data = cJSON_Parse(buffer);
+        if(data) {
+            // Update player state
+            cJSON *pos = cJSON_GetObjectItem(data, "pos");
+            if(pos) {
+                players[player_id].pos[0] = cJSON_GetArrayItem(pos, 0)->valuedouble;
+                players[player_id].pos[1] = cJSON_GetArrayItem(pos, 1)->valuedouble;
+            }
+            
+            cJSON *angle = cJSON_GetObjectItem(data, "angle");
+            if(angle) players[player_id].angle = angle->valuedouble;
+
+            // Process actions
+            cJSON *actions = cJSON_GetObjectItem(data, "actions");
+            if(actions) {
+                for(int i=0; i<cJSON_GetArraySize(actions); i++) {
+                    cJSON *action = cJSON_GetArrayItem(actions, i);
+                    if(cJSON_GetObjectItem(action, "type") && 
+                       strcmp(cJSON_GetObjectItem(action, "type")->valuestring, "shoot") == 0) {
+                        players[player_id].shot = 1;
+                    }
+                }
+            }
+
+            // Process hits
+            cJSON *hit = cJSON_GetObjectItem(data, "hit");
+            if(hit && hit->valueint) {
+                process_hit(player_id, other_id);
+            }
         }
 
-        WaitForSingleObject(lock, INFINITE);
+        // Prepare response
+        cJSON *response = cJSON_CreateObject();
+        cJSON_AddItemToObject(response, "enemy_pos", cJSON_CreateDoubleArray(players[other_id].pos, 2));
+        cJSON_AddNumberToObject(response, "enemy_angle", players[other_id].angle);
+        cJSON_AddNumberToObject(response, "enemy_health", players[other_id].health);
+        cJSON_AddNumberToObject(response, "your_health", players[player_id].health);
+        cJSON_AddBoolToObject(response, "enemy_shot", players[other_id].shot);
+        players[other_id].shot = 0;
 
-        // Aktualizacja pozycji i przetwarzanie akcji
-        int x, y, angle;
-        bool shot;
-        sscanf(buffer, "{\"x\": %d, \"y\": %d, \"angle\": %d, \"shot\": %d}", &x, &y, &angle, &shot);
-        players[player_id].x = x;
-        players[player_id].y = y;
-        players[player_id].angle = angle;
-        players[player_id].shot = shot;
-
-        // Przetwarzanie strzału
-        if (shot) {
-            int target_id = 1 - player_id;
-            process_hit(player_id, target_id);
+        if(hits[player_id]) {
+            cJSON_AddBoolToObject(response, "hit", 1);
+            hits[player_id] = 0;
         }
 
-        // Przygotowanie odpowiedzi
-        int enemy_id = 1 - player_id;
-        sprintf(buffer, "{\"enemy_x\": %d, \"enemy_y\": %d, \"enemy_angle\": %d, \"enemy_health\": %d, \"your_health\": %d}",
-                players[enemy_id].x, players[enemy_id].y, players[enemy_id].angle, players[enemy_id].health, players[player_id].health);
-
-        send_data(conn, buffer);
-
-        ReleaseMutex(lock);
+        send_json(sock, response);
+        cJSON_Delete(response);
+        ReleaseMutex(mutex);
     }
 
-    closesocket(conn);
+    closesocket(sock);
+    free(client);
     return 0;
 }
 
 int main() {
     WSADATA wsa;
-    SOCKET server_socket, client_socket;
-    struct sockaddr_in server_addr, client_addr;
-    int client_addr_size = sizeof(client_addr);
+    SOCKET server_socket;
+    struct sockaddr_in server;
 
-    // Inicjalizacja WinSock
-    WSAStartup(MAKEWORD(2, 2), &wsa);
-
-    // Tworzenie socketu
+    WSAStartup(MAKEWORD(2,2), &wsa);
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_socket == INVALID_SOCKET) {
-        printf("Could not create socket: %d\n", WSAGetLastError());
-        return 1;
-    }
-
-    // Konfiguracja adresu serwera
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(PORT);
-
-    // Bindowanie socketu
-    if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
-        printf("Bind failed: %d\n", WSAGetLastError());
-        return 1;
-    }
-
-    listen(server_socket, 2);
-
+    
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = INADDR_ANY;
+    server.sin_port = htons(PORT);
+    
+    bind(server_socket, (struct sockaddr*)&server, sizeof(server));
+    listen(server_socket, MAX_CLIENTS);
+    
+    mutex = CreateMutex(NULL, FALSE, NULL);
     printf("Waiting for connections...\n");
 
-    lock = CreateMutex(NULL, FALSE, NULL);
-
-    for (int i = 0; i < 2; i++) {
-        client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_addr_size);
-        if (client_socket == INVALID_SOCKET) {
-            printf("Accept failed: %d\n", WSAGetLastError());
-            continue;
-        }
-
+    for(int i=0; i<MAX_CLIENTS; i++) {
+        SOCKET client_socket = accept(server_socket, NULL, NULL);
         printf("Player %d connected\n", i);
-
-        players[i] = (Player){.x = 0, .y = 0, .angle = i == 0 ? 0 : 180, .health = 100, .shot = false};
-        CreateThread(NULL, 0, handle_client, (LPVOID)client_socket, 0, NULL);
+        
+        ClientArgs *args = malloc(sizeof(ClientArgs));
+        args->socket = client_socket;
+        args->player_id = i;
+        
+        _beginthreadex(NULL, 0, client_handler, args, 0, NULL);
     }
 
-    WaitForSingleObject(lock, INFINITE);
-
+    getchar();
     closesocket(server_socket);
     WSACleanup();
-
+    CloseHandle(mutex);
     return 0;
 }

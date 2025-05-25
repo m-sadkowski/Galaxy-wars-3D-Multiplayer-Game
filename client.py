@@ -34,6 +34,8 @@ class Client:
                 if 'your_health' in data:
                     prev_health = self.game.player.health
                     self.game.player.health = data['your_health']
+                    if data['your_health'] != prev_health:
+                        print("Zmiana zycia")
                     self.game.player.alive = (data['your_health'] > 0)
                     # Handle player death only once
                     if prev_health > 0 >= data['your_health']:
