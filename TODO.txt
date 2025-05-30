@@ -6,6 +6,6 @@
 - Main menu with settings (resolution, mouse sensitivity etc.)
 - Handle death screen (text, rematch)
 
-gcc server.c cJSON.c -o server.exe -lws2_32
+gcc server.c cJSON/cJSON.c -o server.exe -lws2_32
 python client.py
 python client.py

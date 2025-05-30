@@ -1,7 +1,7 @@
 import socket
 import threading
 import json
-from ready.settings import *
+from settings import *
 import time
 
 

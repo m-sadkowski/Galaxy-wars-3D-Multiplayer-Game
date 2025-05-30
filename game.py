@@ -1,13 +1,12 @@
 import sys
-from ready.map import *
-from ready.player import *
-from ready.raycasting import *
-from ready.object_renderer import *
-from ready.object_handler import *
-from ready.turret import *
-from ready.sounds import *
+from map import *
+from player import *
+from raycasting import *
+from object_renderer import *
+from object_handler import *
+from turret import *
+from sounds import *
 from enemy import *
-
 
 class Game:
     def __init__(self, client, initial_data):
@@ -23,6 +22,7 @@ class Game:
         pg.time.set_timer(self.global_event, 40)  # Timer for animations
 
         # Game init
+        self.started = False
         self.player = Player(self, initial_data['pos'], initial_data['angle'])
         self.player.health = initial_data['health']
         self.enemy = None

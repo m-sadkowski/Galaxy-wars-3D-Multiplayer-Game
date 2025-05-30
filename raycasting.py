@@ -1,5 +1,5 @@
 import pygame as pg
-from ready.settings import *
+from settings import *
 
 
 class RayCasting:

@@ -1,9 +1,8 @@
 import socket
 import json
 import threading
-from ready.settings import *
+from settings import *
 from game import Game
-
 
 class Client:
     def __init__(self):
@@ -29,24 +28,27 @@ class Client:
                 data = json.loads(self.client.recv(4096).decode())
                 if not data:
                     break
+                if 'game_started' in data and data['game_started']:
+                    print("Game started!")
+                    self.game.started = True
                 if 'enemy_pos' in data and 'enemy_angle' in data:
                     self.game.update_enemy(data['enemy_pos'], data['enemy_angle'])
                 if 'your_health' in data:
                     prev_health = self.game.player.health
                     self.game.player.health = data['your_health']
                     if data['your_health'] != prev_health:
-                        print("Zmiana zycia")
+                        print("Your life has been changed.")
                     self.game.player.alive = (data['your_health'] > 0)
                     # Handle player death only once
                     if prev_health > 0 >= data['your_health']:
-                        # print("Player died!")
+                        print("You died!")
                         self.game.handle_player_death()
                 if 'enemy_health' in data:
                     self.game.enemy.health = data['enemy_health']
                     self.game.enemy.alive = (data['enemy_health'] > 0)
                 if 'enemy_shot' in data:
                     if data['enemy_shot']:
-                        # print("Enemy shot!")
+                        print("Enemy shot!")
                         self.game.notify_enemy_shot()
             except json.JSONDecodeError:
                 continue

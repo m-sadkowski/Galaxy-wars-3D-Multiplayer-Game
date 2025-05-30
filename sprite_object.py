@@ -1,5 +1,5 @@
 import pygame as pg
-from ready.settings import *
+from settings import *
 import os
 from collections import deque
 

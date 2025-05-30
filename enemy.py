@@ -1,5 +1,5 @@
-from ready.sprite_object import *
-from ready.settings import *
+from sprite_object import *
+from settings import *
 import math
 
 

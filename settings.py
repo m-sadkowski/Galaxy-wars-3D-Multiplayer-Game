@@ -4,7 +4,7 @@ import math
 RES = WIDTH, HEIGHT = 1920//2, 1080//2
 HALF_WIDTH = WIDTH // 2
 HALF_HEIGHT = HEIGHT // 2
-FPS = 60
+FPS = 120
 
 # Player
 PLAYER_1_POS = 1.5, 5

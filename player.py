@@ -1,4 +1,4 @@
-from ready.settings import *
+from settings import *
 import pygame as pg
 import math
 
@@ -23,7 +23,7 @@ class Player:
             self.did_shot = False
 
     def single_fire_event(self, event):
-        if not self.alive:
+        if not self.alive or not self.game.started:
             return
         if event.type == pg.MOUSEBUTTONDOWN:
             if event.button == 1 and not self.shot and not self.game.turret.reloading:
@@ -33,6 +33,8 @@ class Player:
                 self.game.turret.reloading = True
 
     def movement(self):
+        if not self.game.started:
+            return
         sin_a = math.sin(self.angle)
         cos_a = math.cos(self.angle)
         dx, dy = 0, 0
