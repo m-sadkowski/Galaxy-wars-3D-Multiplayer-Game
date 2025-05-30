@@ -23,6 +23,8 @@ class EnemySprite(AnimatedSprite):
         self.death_animation_complete = False
         self.death_animation_start = False
 
+    # Animations
+
     def animate_attack(self):
         self.animate(self.attack_images)
         self.animation_frame_counter += 1
@@ -49,6 +51,8 @@ class EnemySprite(AnimatedSprite):
                 self.death_animation_complete = True
         else:
             self.image = self.death_images[-1]
+
+    # Others
 
     def update(self):
         self.check_animation_time()

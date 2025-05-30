@@ -1,7 +1,6 @@
 import pygame as pg
 from settings import *
 
-
 class RayCasting:
     def __init__(self, game):
         self.game = game

@@ -18,7 +18,7 @@ git clone https://github.com/m-sadkowski/Galaxy-wars-3D-Multiplayer-Game.git
 cd Galaxy-wars-3D-Multiplayer-Game
 ```
 
-Make sure you have all necessary dependencies installed (e.g., SDL2 or other libraries if required).
+Make sure you have all necessary dependencies installed (e.g., PyGame or other libraries).
 
 ## Running the Game
 
@@ -26,7 +26,8 @@ To run the server:
 
 ```bash
 # Example command
-python server.py
+gcc server.c cJSON/cJSON.c -o server.exe -lws2_32
+server.exe
 ```
 
 To run the client:
