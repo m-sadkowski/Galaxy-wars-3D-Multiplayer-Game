@@ -82,7 +82,7 @@ class Game:
             overlay.fill(self.win_color)
             overlay.set_alpha(150)
             self.screen.blit(overlay, (0, 0))
-        elif self.enemy_disconnected:
+        elif self.enemy_disconnected and self.player.alive:
             overlay = pg.Surface(RES)
             overlay.fill(self.disconnect_color)
             overlay.set_alpha(150)
