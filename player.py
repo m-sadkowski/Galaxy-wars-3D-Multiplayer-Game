@@ -23,7 +23,7 @@ class Player:
             self.did_shot = False
 
     def single_fire_event(self, event):
-        if not self.alive or not self.game.started:
+        if not self.alive or not self.game.started or self.game.enemy_disconnected:
             return
         if event.type == pg.MOUSEBUTTONDOWN:
             if event.button == 1 and not self.shot and not self.game.turret.reloading:
@@ -33,7 +33,7 @@ class Player:
                 self.game.turret.reloading = True
 
     def movement(self):
-        if not self.game.started:
+        if not self.game.started or self.game.enemy_disconnected:
             return
         sin_a = math.sin(self.angle)
         cos_a = math.cos(self.angle)

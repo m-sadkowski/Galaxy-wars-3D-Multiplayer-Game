@@ -22,6 +22,19 @@ class Client:
             self.running = False
             self.client.close()
 
+    def disconnect(self):
+        try:
+            data = {
+                'disconnect': True,
+                'player_id': self.player_id
+            }
+            self.client.send(json.dumps(data).encode())
+            self.client.close()
+            self.running = False
+            print("Disconnected from server.")
+        except Exception as e:
+            print(f"Error during disconnect: {e}")
+
     def receive_data(self):
         while self.running:
             try:
@@ -31,6 +44,9 @@ class Client:
                 if 'game_started' in data and data['game_started']:
                     print("Game started!")
                     self.game.started = True
+                if 'enemy_disconnected' in data and data['enemy_disconnected']:
+                    print("Enemy disconnected!")
+                    self.game.enemy_disconnected = True
                 if 'enemy_pos' in data and 'enemy_angle' in data:
                     self.game.update_enemy(data['enemy_pos'], data['enemy_angle'])
                 if 'your_health' in data:

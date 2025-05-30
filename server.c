@@ -65,6 +65,19 @@ void process_hit(int shooter_id, int target_id) {
     ReleaseMutex(mutex);
 }
 
+void broadcast_disconnect(int disconnected_id) {
+    cJSON *msg = cJSON_CreateObject();
+    cJSON_AddBoolToObject(msg, "enemy_disconnected", 1);
+
+    for(int i = 0; i < MAX_CLIENTS; i++) {
+        if (i != disconnected_id && client_sockets[i] != INVALID_SOCKET) {
+            send_json(client_sockets[i], msg);
+        }
+    }
+
+    cJSON_Delete(msg);
+}
+
 unsigned __stdcall client_handler(void *args) {
     ClientArgs *client = (ClientArgs *)args;
     SOCKET sock = client->socket;
@@ -82,21 +95,32 @@ unsigned __stdcall client_handler(void *args) {
     send_json(sock, init_data);
     cJSON_Delete(init_data);
 
-    // Jeśli obaj gracze są podłączeni, wyślij game_started
     if(connected_clients == MAX_CLIENTS) {
         broadcast_game_started();
     }
 
     while(1) {
         int bytes = recv(sock, buffer, BUFFER_SIZE - 1, 0);
-        if(bytes <= 0) break;
+        if(bytes <= 0) {
+            printf("Player %d disconnected\n", player_id);
+            broadcast_disconnect(player_id);
+            break;
+        }
         buffer[bytes] = '\0';
 
         WaitForSingleObject(mutex, INFINITE);
-
         cJSON *data = cJSON_Parse(buffer);
+
         if(data) {
-            // Update player state
+            cJSON *disconnect = cJSON_GetObjectItem(data, "disconnect");
+            if(disconnect && disconnect->valueint) {
+                printf("Player %d disconnected\n", player_id);
+                broadcast_disconnect(player_id);
+                cJSON_Delete(data);
+                ReleaseMutex(mutex);
+                break;
+            }
+
             cJSON *pos = cJSON_GetObjectItem(data, "pos");
             if(pos) {
                 players[player_id].pos[0] = cJSON_GetArrayItem(pos, 0)->valuedouble;
@@ -145,6 +169,8 @@ unsigned __stdcall client_handler(void *args) {
     }
 
     closesocket(sock);
+    client_sockets[player_id] = INVALID_SOCKET;
+    connected_clients--;
     free(client);
     return 0;
 }

@@ -46,6 +46,11 @@ class Game:
         self.flash_color = DEATH_FLASH_COLOR
         self.player_dead = False
 
+        # On-screen disconnect effect
+        self.enemy_disconnected = False
+        self.disconnect_effect_alpha = 0
+        self.disconnect_color = (255, 255, 0)
+
 
     def init_enemy(self, initial_data):
         enemy_pos = PLAYER_2_POS if initial_data['player_id'] == 0 else PLAYER_1_POS
@@ -67,6 +72,13 @@ class Game:
 
     def notify_enemy_shot(self):
         self.enemy_shot_event = True
+
+    def draw_disconnect_effect(self):
+        if self.enemy_disconnected:
+            overlay = pg.Surface(RES)
+            overlay.fill(self.disconnect_color)
+            overlay.set_alpha(150)
+            self.screen.blit(overlay, (0, 0))
 
     def update(self):
         self.handle_player_death()
@@ -137,12 +149,14 @@ class Game:
         self.turret.draw()
         self.draw_death_effect()
         # print(self.player.angle)
+        self.draw_disconnect_effect()
 
     def check_events(self):
         self.global_trigger = False
         for event in pg.event.get():
             if event.type == pg.QUIT or (event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE):
                 self.client.running = False
+                self.client.disconnect()
                 pg.quit()
                 sys.exit()
             elif event.type == self.global_event:
