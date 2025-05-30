@@ -51,6 +51,9 @@ class Game:
         self.disconnect_effect_alpha = 0
         self.disconnect_color = (255, 255, 0)
 
+        # On-screen win effect
+        self.win_color = (0, 255, 0)
+
 
     def init_enemy(self, initial_data):
         enemy_pos = PLAYER_2_POS if initial_data['player_id'] == 0 else PLAYER_1_POS
@@ -74,7 +77,12 @@ class Game:
         self.enemy_shot_event = True
 
     def draw_disconnect_effect(self):
-        if self.enemy_disconnected:
+        if self.enemy.health <= 0:
+            overlay = pg.Surface(RES)
+            overlay.fill(self.win_color)
+            overlay.set_alpha(150)
+            self.screen.blit(overlay, (0, 0))
+        elif self.enemy_disconnected:
             overlay = pg.Surface(RES)
             overlay.fill(self.disconnect_color)
             overlay.set_alpha(150)
