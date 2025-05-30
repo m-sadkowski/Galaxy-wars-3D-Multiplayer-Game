@@ -1,3 +1,4 @@
+
 # Galaxy Wars 3D
 
 ## Description
@@ -6,10 +7,10 @@
 
 ## Features
 
-- Fast-paced 1v1 space battles
-- Health kits, speed boosts, and powerful missiles on the map
-- Smooth multiplayer experience with server-authoritative mechanics
-- Classic raycasting-based 3D graphics
+* Fast-paced 1v1 space battles
+* Health kits, speed boosts, and powerful missiles on the map
+* Smooth multiplayer experience with server-authoritative mechanics
+* Classic raycasting-based 3D graphics
 
 ## Installation
 
@@ -18,7 +19,12 @@ git clone https://github.com/m-sadkowski/Galaxy-wars-3D-Multiplayer-Game.git
 cd Galaxy-wars-3D-Multiplayer-Game
 ```
 
-Make sure you have all necessary dependencies installed (e.g., PyGame or other libraries).
+### Dependencies
+
+Ensure you have the necessary dependencies installed:
+
+* **PyGame** (or other relevant Python libraries)
+* **cJSON** for JSON parsing in the server code (source: [DaveGamble/cJSON](https://github.com/DaveGamble/cJSON))
 
 ## Running the Game
 
@@ -41,13 +47,13 @@ python client.py
 
 ## Controls
 
-- `W` – Move forward
-- `A` – Move left
-- `S` – Move backward
-- `D` – Move right
-- `Left Mouse Button` – Shoot
-- `Right Mouse Button` – Launch missile
-- `ESC` – Exit game
+* `W` – Move forward
+* `A` – Move left
+* `S` – Move backward
+* `D` – Move right
+* `Left Mouse Button` – Shoot
+* `Right Mouse Button` – Launch missile
+* `ESC` – Exit game
 
 ## Contributing
 
