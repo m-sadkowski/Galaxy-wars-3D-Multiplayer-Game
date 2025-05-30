@@ -1,6 +1,8 @@
 import socket
 import json
 import threading
+import time
+
 from settings import *
 from game import Game
 
@@ -9,18 +11,29 @@ class Client:
         self.host = SERVER_IP
         self.port = PORT
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            self.client.connect((self.host, self.port))
-            initial_data = json.loads(self.client.recv(4096).decode())
-            self.player_id = initial_data['player_id']
-            self.game = Game(self, initial_data)
-            self.running = True
-            threading.Thread(target=self.receive_data).start()
-            self.game.run()
-        except Exception as e:
-            print(f"Connection error: {e}")
-            self.running = False
-            self.client.close()
+        self.reconnect_attempts = 0
+        self.max_reconnect_attempts = 5
+
+        while self.reconnect_attempts < self.max_reconnect_attempts:
+            try:
+                self.client.connect((self.host, self.port))
+                initial_data = json.loads(self.client.recv(4096).decode())
+                self.player_id = initial_data['player_id']
+                self.game = Game(self, initial_data)
+                self.running = True
+                threading.Thread(target=self.receive_data).start()
+                self.game.run()
+                break
+            except Exception as e:
+                print(f"Connection error: {e}")
+                self.reconnect_attempts += 1
+                if self.reconnect_attempts < self.max_reconnect_attempts:
+                    print(f"Attempting to reconnect... ({self.reconnect_attempts}/{self.max_reconnect_attempts})")
+                    time.sleep(2)
+                else:
+                    print("Max reconnection attempts reached. Exiting.")
+                    self.running = False
+                    self.client.close()
 
     def disconnect(self):
         try:
@@ -47,6 +60,9 @@ class Client:
                 if 'enemy_disconnected' in data and data['enemy_disconnected']:
                     print("Enemy disconnected!")
                     self.game.enemy_disconnected = True
+                if 'enemy_reconnected' in data and data['enemy_reconnected']:
+                    print("Enemy reconnected!")
+                    self.game.enemy_disconnected = False
                 if 'enemy_pos' in data and 'enemy_angle' in data:
                     self.game.update_enemy(data['enemy_pos'], data['enemy_angle'])
                 if 'your_health' in data:

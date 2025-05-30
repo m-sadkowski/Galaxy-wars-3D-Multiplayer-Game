@@ -78,6 +78,19 @@ void broadcast_disconnect(int disconnected_id) {
     cJSON_Delete(msg);
 }
 
+void broadcast_reconnect(int reconnected_id) {
+    cJSON *msg = cJSON_CreateObject();
+    cJSON_AddBoolToObject(msg, "enemy_reconnected", 1);
+
+    for(int i = 0; i < MAX_CLIENTS; i++) {
+        if (i != reconnected_id && client_sockets[i] != INVALID_SOCKET) {
+            send_json(client_sockets[i], msg);
+        }
+    }
+
+    cJSON_Delete(msg);
+}
+
 unsigned __stdcall client_handler(void *args) {
     ClientArgs *client = (ClientArgs *)args;
     SOCKET sock = client->socket;
@@ -206,6 +219,32 @@ int main() {
         connected_clients++;
         
         _beginthreadex(NULL, 0, client_handler, args, 0, NULL);
+    }
+
+
+    while(1) {
+        for(int i=0; i<MAX_CLIENTS; i++) {
+            if(client_sockets[i] == INVALID_SOCKET) {
+                SOCKET client_socket = accept(server_socket, NULL, NULL);
+                if(client_socket != INVALID_SOCKET) {
+                    printf("Player %d connected%s\n", i, connected_clients > 0 ? " (reconnected)" : "");
+
+                    ClientArgs *args = malloc(sizeof(ClientArgs));
+                    args->socket = client_socket;
+                    args->player_id = i;
+
+                    client_sockets[i] = client_socket;
+                    connected_clients++;
+
+                    _beginthreadex(NULL, 0, client_handler, args, 0, NULL);
+
+                    if(connected_clients > 1) {
+                        broadcast_reconnect(i);
+                    }
+                }
+            }
+        }
+        Sleep(100);
     }
 
     getchar();
