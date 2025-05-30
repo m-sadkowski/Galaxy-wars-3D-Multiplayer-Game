@@ -26,7 +26,7 @@ To run the server:
 
 ```bash
 # Example command
-gcc server.c cJSON/cJSON.c -o server.exe -lws2_32
+gcc server.c libs/cJSON/cJSON.c -o server.exe -lws2_32
 server.exe
 ```
 
