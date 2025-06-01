@@ -77,7 +77,6 @@ python client.py
 * `S` – Move backward
 * `D` – Move right
 * `Left Mouse Button` – Shoot
-* `Right Mouse Button` – Launch missile
 * `ESC` – Exit game
 
 ## Troubleshooting
