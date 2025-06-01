@@ -14,11 +14,16 @@ class Player:
         self.health = 0
         self.alive = True
         self.rel = 0
+        self.base_speed = PLAYER_SPEED
+        self.current_speed = PLAYER_SPEED
+        self.speed_boost_end_time = 0
+        self.speed_boost_duration = 5000  # 5 seconds in milliseconds
 
     def update(self):
         if self.alive:
             self.movement()
             self.mouse_control()
+            self.update_speed_boost()
         else:
             self.shot = False
             self.did_shot = False
@@ -33,13 +38,26 @@ class Player:
                 self.game.sounds.shoot_sound.play()
                 self.game.turret.reloading = True
 
+    def update_speed_boost(self):
+        current_time = pg.time.get_ticks()
+        if current_time > self.speed_boost_end_time:
+            self.current_speed = self.base_speed
+        else:
+            # Optional: Add visual feedback for speed boost
+            pass
+
+    def apply_speed_boost(self):
+        self.current_speed = self.base_speed + 0.002  # Add speed boost
+        self.speed_boost_end_time = pg.time.get_ticks() + self.speed_boost_duration
+        print(f"Speed boost activated! New speed: {self.current_speed}")
+
     def movement(self):
         if not self.game.started or self.game.enemy_disconnected:
             return
         sin_a = math.sin(self.angle)
         cos_a = math.cos(self.angle)
         dx, dy = 0, 0
-        speed = PLAYER_SPEED * self.game.delta_time
+        speed = self.current_speed * self.game.delta_time  # Use current_speed instead of constant
         speed_sin = speed * sin_a
         speed_cos = speed * cos_a
 

@@ -54,6 +54,7 @@ MAX_RECCONECT_ATTEMPS = 5
 # Items
 ITEM_TYPES = {
     1: "rocket",
-    2: "health_pack"
+    2: "health_pack",
+    3: "star"
 }
 ITEM_COLLECTION_RANGE = 0.5

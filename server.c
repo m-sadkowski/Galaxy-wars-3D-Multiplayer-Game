@@ -125,15 +125,24 @@ void check_item_collection(int player_id) {
                        map_items[i].pos[0], map_items[i].pos[1]);
 
                 // Apply item effects
-                if(map_items[i].type == 2) {
+                if(map_items[i].type == 2) {  // Repair kit
                     players[player_id].health += 35;
                     if(players[player_id].health > 100) {
                         players[player_id].health = 100;
                     }
                     printf("Player %d health restored to %d\n", player_id, players[player_id].health);
                 }
+                else if(map_items[i].type == 3) {  // Star
+                    // Send speed boost only to the collecting player
+                    cJSON *msg = cJSON_CreateObject();
+                    cJSON_AddNumberToObject(msg, "item_collected", i);
+                    cJSON_AddNumberToObject(msg, "speed_boost", 1);  // Add speed boost flag
+                    send_json(client_sockets[player_id], msg);
+                    cJSON_Delete(msg);
+                    continue;  // Skip the regular item collected notification
+                }
 
-                // Notify both players
+                // Notify both players about the collected item (excluding stars)
                 cJSON *msg = cJSON_CreateObject();
                 cJSON_AddNumberToObject(msg, "item_collected", i);
                 for(int j = 0; j < MAX_CLIENTS; j++) {

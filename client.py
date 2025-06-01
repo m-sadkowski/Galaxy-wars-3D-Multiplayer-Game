@@ -71,7 +71,6 @@ class Client:
                     if data['your_health'] != prev_health:
                         print(f"Your life has been changed - prev: {prev_health} -> current: {data['your_health']}!")
                     self.game.player.alive = (data['your_health'] > 0)
-                    # Handle player death only once
                     if prev_health > 0 >= data['your_health']:
                         print("You died!")
                         self.game.handle_player_death()
@@ -89,6 +88,8 @@ class Client:
                         self.game.object_handler.sprite_list.remove(sprite)
                         del self.game.object_handler.item_sprites[item_id]
                         print(f"Collected item {item_id}")
+                        if 'speed_boost' in data and data['speed_boost']:
+                            self.game.player.apply_speed_boost()
                 if 'map_items' in data:
                     self.game.update_map_items(data['map_items'])
             except json.JSONDecodeError:
