@@ -13,6 +13,7 @@ class Player:
         self.did_shot = False
         self.health = 0
         self.alive = True
+        self.rel = 0
 
     def update(self):
         if self.alive:

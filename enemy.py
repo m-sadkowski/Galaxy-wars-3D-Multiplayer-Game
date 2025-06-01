@@ -6,12 +6,14 @@ import math
 class EnemySprite(AnimatedSprite):
     def __init__(self, game, path='resources/enemy/0.png', pos=(0, 0), scale=0.6, shift=0.38, animation_time=300):
         super().__init__(game, path, pos, scale, shift, animation_time)
+
         # Textures
         self.attack_images = self.get_images(self.path + '/attack')
         self.death_images = self.get_images(self.path + '/death')
         self.idle_images = self.get_images(self.path + '/idle')
         self.damage_images = self.get_images(self.path + '/damage')
         self.walk_images = self.get_images(self.path + '/walk')
+
         # Animation trigger
         self.health = 0
         self.alive = True

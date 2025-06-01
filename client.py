@@ -12,7 +12,7 @@ class Client:
         self.port = PORT
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.reconnect_attempts = 0
-        self.max_reconnect_attempts = 5
+        self.max_reconnect_attempts = MAX_RECCONECT_ATTEMPS
 
         while self.reconnect_attempts < self.max_reconnect_attempts:
             try:
@@ -69,7 +69,7 @@ class Client:
                     prev_health = self.game.player.health
                     self.game.player.health = data['your_health']
                     if data['your_health'] != prev_health:
-                        print("Your life has been changed.")
+                        print("Your life has been changed!")
                     self.game.player.alive = (data['your_health'] > 0)
                     # Handle player death only once
                     if prev_health > 0 >= data['your_health']:
@@ -114,7 +114,6 @@ class Client:
         except Exception as e:
             print(f"Failed to send hit notification: {e}")
             self.running = False
-
 
 if __name__ == '__main__':
     client = Client()
