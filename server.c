@@ -42,13 +42,13 @@ typedef struct {
 } MapItem;
 
 MapItem map_items[] = {
-    {{1.5, 3.5}, 1, 0},  // Rocket
-    {{1.5, 7.5}, 1, 0},  // Rocket
-    {{11.5, 4.5}, 1, 0},  // Rocket
-    {{3.5, 7.5}, 2, 0},  // Repair kit
-    {{10.5, 3.5}, 2, 0},   // Repair kit
-    {{5.5, 9.5}, 3, 0},   // Star
-    {{8.5, 3.5}, 3, 0}   // Star
+    {{1.5, 1.5}, 1, 0},  // Rocket
+    {{14.5, 7.5}, 1, 0},  // Rocket
+    {{6.5, 4.5}, 1, 0},  // Rocket
+    {{6.5, 0}, 2, 0},  // Repair kit
+    {{7.5, 0}, 2, 0},   // Repair kit
+    {{9.5, 4.5}, 3, 0},   // Star
+    {{3.5, 6.5}, 3, 0}   // Star
 };
 #define NUM_ITEMS (sizeof(map_items) / sizeof(MapItem))
 
