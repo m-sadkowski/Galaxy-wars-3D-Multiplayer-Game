@@ -1,5 +1,3 @@
-- Handle object pick-up (repair kit, stars, rockets)
-- Handle repair kit (extra health)
 - Handle stars (extra speed for 5 seconds)
 - Handle shooting rockets (extra damage, sound, animation, only if picked up, right mouse button)
 - Main menu with settings (resolution, mouse sensitivity etc.)

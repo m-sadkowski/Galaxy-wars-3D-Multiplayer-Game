@@ -2,6 +2,7 @@
 #include <winsock2.h>
 #include <process.h>
 #include <windows.h>
+#include <math.h>
 #include "libs/cJSON/cJSON.h"
 
 #pragma comment(lib, "ws2_32.lib")
@@ -29,8 +30,25 @@ Player players[2] = {
 
 HANDLE mutex;
 int hits[2] = {0};
-int connected_clients = 0;  // Licznik podłączonych graczy
-SOCKET client_sockets[MAX_CLIENTS];  // Przechowuje gniazda klientów
+int connected_clients = 0;
+SOCKET client_sockets[MAX_CLIENTS];
+
+typedef struct {
+    double pos[2];
+    int type;  // 1 - rocket, 2 - repair kit, 3 - star
+    int collected;
+} MapItem;
+
+MapItem map_items[] = {
+    {{1.5, 3.5}, 1, 0},  // Rocket
+    {{1.5, 7.5}, 1, 0},  // Rocket
+    {{11.5, 4.5}, 1, 0},  // Rocket
+    {{3.5, 7.5}, 2, 0},  // Repair kit
+    {{10.5, 3.5}, 2, 0},   // Repair kit
+    {{5.5, 9.5}, 3, 0},   // Star
+    {{8.5, 3.5}, 3, 0}   // Star
+};
+#define NUM_ITEMS (sizeof(map_items) / sizeof(MapItem))
 
 void send_json(SOCKET sock, cJSON *json) {
     char *data = cJSON_PrintUnformatted(json);
@@ -91,6 +109,46 @@ void broadcast_reconnect(int reconnected_id) {
     cJSON_Delete(msg);
 }
 
+void check_item_collection(int player_id) {
+    WaitForSingleObject(mutex, INFINITE);
+
+    for(int i = 0; i < NUM_ITEMS; i++) {
+        if(!map_items[i].collected) {
+            double dx = players[player_id].pos[0] - map_items[i].pos[0];
+            double dy = players[player_id].pos[1] - map_items[i].pos[1];
+            double dist = sqrt(dx*dx + dy*dy);
+
+            if(dist < 0.5) {
+                map_items[i].collected = 1;
+                printf("Player %d collected item %d at (%.1f, %.1f)\n",
+                       player_id, map_items[i].type,
+                       map_items[i].pos[0], map_items[i].pos[1]);
+
+                // Apply item effects
+                if(map_items[i].type == 2) {
+                    players[player_id].health += 35;
+                    if(players[player_id].health > 100) {
+                        players[player_id].health = 100;
+                    }
+                    printf("Player %d health restored to %d\n", player_id, players[player_id].health);
+                }
+
+                // Notify both players
+                cJSON *msg = cJSON_CreateObject();
+                cJSON_AddNumberToObject(msg, "item_collected", i);
+                for(int j = 0; j < MAX_CLIENTS; j++) {
+                    if(client_sockets[j] != INVALID_SOCKET) {
+                        send_json(client_sockets[j], msg);
+                    }
+                }
+                cJSON_Delete(msg);
+            }
+        }
+    }
+
+    ReleaseMutex(mutex);
+}
+
 unsigned __stdcall client_handler(void *args) {
     ClientArgs *client = (ClientArgs *)args;
     SOCKET sock = client->socket;
@@ -105,6 +163,20 @@ unsigned __stdcall client_handler(void *args) {
     cJSON_AddNumberToObject(init_data, "angle", players[player_id].angle);
     cJSON_AddNumberToObject(init_data, "health", players[player_id].health);
     cJSON_AddNumberToObject(init_data, "enemy_health", players[other_id].health);
+
+    // Send initial map items
+    cJSON *items_array = cJSON_CreateArray();
+    for(int i = 0; i < NUM_ITEMS; i++) {
+        if(!map_items[i].collected) {
+            cJSON *item = cJSON_CreateObject();
+            cJSON_AddNumberToObject(item, "id", i);
+            cJSON_AddNumberToObject(item, "type", map_items[i].type);
+            cJSON_AddItemToObject(item, "pos", cJSON_CreateDoubleArray(map_items[i].pos, 2));
+            cJSON_AddItemToArray(items_array, item);
+        }
+    }
+    cJSON_AddItemToObject(init_data, "map_items", items_array);
+
     send_json(sock, init_data);
     cJSON_Delete(init_data);
 
@@ -162,6 +234,9 @@ unsigned __stdcall client_handler(void *args) {
             }
         }
 
+        // Check for item collection
+        check_item_collection(player_id);
+
         // Prepare response
         cJSON *response = cJSON_CreateObject();
         cJSON_AddItemToObject(response, "enemy_pos", cJSON_CreateDoubleArray(players[other_id].pos, 2));
@@ -175,6 +250,19 @@ unsigned __stdcall client_handler(void *args) {
             cJSON_AddBoolToObject(response, "hit", 1);
             hits[player_id] = 0;
         }
+
+        // Send current map items
+        cJSON *current_items_array = cJSON_CreateArray();
+        for(int i = 0; i < NUM_ITEMS; i++) {
+            if(!map_items[i].collected) {
+                cJSON *item = cJSON_CreateObject();
+                cJSON_AddNumberToObject(item, "id", i);
+                cJSON_AddNumberToObject(item, "type", map_items[i].type);
+                cJSON_AddItemToObject(item, "pos", cJSON_CreateDoubleArray(map_items[i].pos, 2));
+                cJSON_AddItemToArray(current_items_array, item);
+            }
+        }
+        cJSON_AddItemToObject(response, "map_items", current_items_array);
 
         send_json(sock, response);
         cJSON_Delete(response);
@@ -214,13 +302,11 @@ int main() {
         args->socket = client_socket;
         args->player_id = i;
 
-        // Zapisz gniazdo klienta
         client_sockets[i] = client_socket;
         connected_clients++;
-        
+
         _beginthreadex(NULL, 0, client_handler, args, 0, NULL);
     }
-
 
     while(1) {
         for(int i=0; i<MAX_CLIENTS; i++) {

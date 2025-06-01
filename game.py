@@ -160,6 +160,9 @@ class Game:
 
     # Game
 
+    def update_map_items(self, items_data):
+        self.object_handler.update_map_items(items_data)
+
     def check_events(self):
         self.global_trigger = False
         for event in pg.event.get():

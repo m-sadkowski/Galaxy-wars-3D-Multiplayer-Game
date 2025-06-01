@@ -69,7 +69,7 @@ class Client:
                     prev_health = self.game.player.health
                     self.game.player.health = data['your_health']
                     if data['your_health'] != prev_health:
-                        print("Your life has been changed!")
+                        print(f"Your life has been changed - prev: {prev_health} -> current: {data['your_health']}!")
                     self.game.player.alive = (data['your_health'] > 0)
                     # Handle player death only once
                     if prev_health > 0 >= data['your_health']:
@@ -82,6 +82,15 @@ class Client:
                     if data['enemy_shot']:
                         print("Enemy shot!")
                         self.game.notify_enemy_shot()
+                if 'item_collected' in data:
+                    item_id = data['item_collected']
+                    if item_id in self.game.object_handler.item_sprites:
+                        sprite = self.game.object_handler.item_sprites[item_id]
+                        self.game.object_handler.sprite_list.remove(sprite)
+                        del self.game.object_handler.item_sprites[item_id]
+                        print(f"Collected item {item_id}")
+                if 'map_items' in data:
+                    self.game.update_map_items(data['map_items'])
             except json.JSONDecodeError:
                 continue
             except Exception as e:
