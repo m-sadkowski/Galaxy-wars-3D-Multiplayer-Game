@@ -1,4 +1,3 @@
-
 # Galaxy Wars 3D
 
 ## Description
@@ -23,27 +22,53 @@ cd Galaxy-wars-3D-Multiplayer-Game
 
 Ensure you have the necessary dependencies installed:
 
-* **PyGame** (or other relevant Python libraries)
-* **cJSON** for JSON parsing in the server code (source: [DaveGamble/cJSON](https://github.com/DaveGamble/cJSON))
+* **Python 3.x** with PyGame
+* **GCC** (for compiling the server on Windows/Linux)
+* **cJSON** (included in `libs/cJSON/`)
+* **Ngrok** (for multiplayer over internet) - [download here](https://ngrok.com/download)
 
 ## Running the Game
 
-To run the server:
-
+### Single Player (Local Testing)
 ```bash
-# Example command
-gcc server.c libs/cJSON/cJSON.c -o server.exe -lws2_32
-server.exe
-```
+# Compile and run server
+gcc server.c libs/cJSON/cJSON.c -o server -lws2_32
+./server
 
-To run the client:
-
-```bash
-# Example command
+# Run client in separate terminal
 python client.py
 ```
 
-*(Adjust commands depending on your environment and setup.)*
+### Multiplayer Setup (Internet)
+
+1. **Host Player (Server Owner)**
+   ```bash
+   # 1. Run the server
+   gcc server.c libs/cJSON/cJSON.c -o server -lws2_32
+   ./server
+
+   # 2. In a new terminal, start ngrok tunnel
+   ngrok tcp 5555
+   ```
+
+2. **Remote Player (Friend)**
+   - Get the ngrok address from host (looks like `tcp://X.tcp.ngrok.io:XXXXX`)
+   - Modify `settings.py`:
+     ```python
+     SERVER_IP = 'X.tcp.ngrok.io'  # Replace with host's ngrok address
+     PORT = XXXXX                  # Replace with host's ngrok port
+     ```
+   - Run client normally:
+     ```bash
+     python client.py
+     ```
+
+3. **Host Client Setup**
+   - Keep `settings.py` as default:
+     ```python
+     SERVER_IP = 'localhost'
+     PORT = 5555
+     ```
 
 ## Controls
 
@@ -54,6 +79,22 @@ python client.py
 * `Left Mouse Button` – Shoot
 * `Right Mouse Button` – Launch missile
 * `ESC` – Exit game
+
+## Troubleshooting
+
+- **Connection Issues**:
+  - Ensure ngrok and server are running on host
+  - Verify correct IP/port in remote client's settings.py
+  - Check firewall allows TCP connections on port 5555
+
+- **"Address already in use"**:
+  ```bash
+  # Linux/Mac
+  kill $(lsof -t -i:5555)
+
+  # Windows
+  taskkill /F /PID $(netstat -ano | findstr :5555 | awk '{print $5}')
+  ```
 
 ## Contributing
 
