@@ -18,6 +18,8 @@ class Player:
         self.current_speed = PLAYER_SPEED
         self.speed_boost_end_time = 0
         self.speed_boost_duration = 5000  # 5 seconds in milliseconds
+        self.rockets = 0
+        self.using_rocket = False
 
     def update(self):
         if self.alive:
@@ -35,7 +37,14 @@ class Player:
             if event.button == 1 and not self.shot and not self.game.turret.reloading:
                 self.shot = True
                 self.did_shot = True
-                self.game.sounds.shoot_sound.play()
+                self.using_rocket = (self.rockets > 0)
+
+                if self.using_rocket:
+                    self.game.sounds.rocket_sound.play()
+                    self.rockets -= 1
+                else:
+                    self.game.sounds.shoot_sound.play()
+
                 self.game.turret.reloading = True
 
     def update_speed_boost(self):

@@ -1,7 +1,7 @@
 import math
 
 # Game window
-RES = WIDTH, HEIGHT = 2560//2, 1440//2
+RES = WIDTH, HEIGHT = 1920//2, 1080//2
 HALF_WIDTH = WIDTH // 2
 HALF_HEIGHT = HEIGHT // 2
 FPS = 120
@@ -58,3 +58,6 @@ ITEM_TYPES = {
     3: "star"
 }
 ITEM_COLLECTION_RANGE = 0.5
+
+# Rockets
+MAX_ROCKETS = 3

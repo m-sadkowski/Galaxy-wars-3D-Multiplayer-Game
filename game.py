@@ -145,6 +145,12 @@ class Game:
     def draw(self):
         self.object_renderer.draw()
         self.turret.draw()
+
+        if self.player.alive:
+            rocket_text = f"Rockets: {self.player.rockets}"
+            text_surface = pg.font.SysFont('Arial', 24).render(rocket_text, True, (255, 255, 255))
+            self.screen.blit(text_surface, (20, 20))
+
         if self.player_dead:
             self.draw_screen_effect('death')
         elif self.enemy.health <= 0:
@@ -192,7 +198,8 @@ class Game:
         if self.player.did_shot:
             actions.append({
                 'type': 'shoot',
-                'direction': self.player.angle
+                'direction': self.player.angle,
+                'is_rocket': self.player.using_rocket
             })
             self.player.did_shot = False
 

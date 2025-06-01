@@ -65,6 +65,9 @@ class Client:
                     self.game.enemy_disconnected = False
                 if 'enemy_pos' in data and 'enemy_angle' in data:
                     self.game.update_enemy(data['enemy_pos'], data['enemy_angle'])
+                if 'rockets' in data:
+                    self.game.player.rockets = min(self.game.player.rockets + data['rockets'], MAX_ROCKETS)
+                    print(f"Rockets updated: {self.game.player.rockets}")
                 if 'your_health' in data:
                     prev_health = self.game.player.health
                     self.game.player.health = data['your_health']
@@ -117,7 +120,8 @@ class Client:
             data = {
                 'pos': self.game.player.pos,
                 'angle': self.game.player.angle,
-                'hit': True
+                'hit': True,
+                'is_rocket': self.game.player.using_rocket
             }
             print(data)
             self.client.send(json.dumps(data).encode())

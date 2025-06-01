@@ -11,6 +11,8 @@
 #define BUFFER_SIZE 1024
 #define MAX_CLIENTS 2
 
+#define DAMAGE 25
+
 typedef struct {
     SOCKET socket;
     int player_id;
@@ -71,10 +73,15 @@ void broadcast_game_started() {
 void process_hit(int shooter_id, int target_id) {
     WaitForSingleObject(mutex, INFINITE);
 
-    players[target_id].health -= 35;
+    int is_rocket = players[shooter_id].shot == 2;
+    int damage = is_rocket ? 2 * DAMAGE : DAMAGE;
+
+    players[target_id].health -= damage;
     hits[target_id] = 1;
-    printf("Player %d hit player %d! Health remaining: %d\n",
-           shooter_id, target_id, players[target_id].health);
+    printf("Player %d hit player %d for %d damage (%s)! Health remaining: %d\n",
+           shooter_id, target_id, damage,
+           is_rocket ? "rocket" : "normal",
+           players[target_id].health);
 
     if(players[target_id].health <= 0) {
         printf("Player %d defeated by player %d!\n", target_id, shooter_id);
@@ -125,21 +132,29 @@ void check_item_collection(int player_id) {
                        map_items[i].pos[0], map_items[i].pos[1]);
 
                 // Apply item effects
+                if(map_items[i].type == 1) {  // Rocket
+                    cJSON *msg = cJSON_CreateObject();
+                    cJSON_AddNumberToObject(msg, "item_collected", i);
+                    cJSON_AddNumberToObject(msg, "rockets", 1);
+                    send_json(client_sockets[player_id], msg);
+                    cJSON_Delete(msg);
+                    printf("Player %d collected rocket\n", player_id);
+                    continue;
+                }
                 if(map_items[i].type == 2) {  // Repair kit
-                    players[player_id].health += 35;
+                    players[player_id].health += DAMAGE;
                     if(players[player_id].health > 100) {
                         players[player_id].health = 100;
                     }
                     printf("Player %d health restored to %d\n", player_id, players[player_id].health);
                 }
-                else if(map_items[i].type == 3) {  // Star
-                    // Send speed boost only to the collecting player
+                if(map_items[i].type == 3) {  // Star
                     cJSON *msg = cJSON_CreateObject();
                     cJSON_AddNumberToObject(msg, "item_collected", i);
-                    cJSON_AddNumberToObject(msg, "speed_boost", 1);  // Add speed boost flag
+                    cJSON_AddNumberToObject(msg, "speed_boost", 1);
                     send_json(client_sockets[player_id], msg);
                     cJSON_Delete(msg);
-                    continue;  // Skip the regular item collected notification
+                    continue;
                 }
 
                 // Notify both players about the collected item (excluding stars)
@@ -231,7 +246,8 @@ unsigned __stdcall client_handler(void *args) {
                     cJSON *action = cJSON_GetArrayItem(actions, i);
                     if(cJSON_GetObjectItem(action, "type") &&
                        strcmp(cJSON_GetObjectItem(action, "type")->valuestring, "shoot") == 0) {
-                        players[player_id].shot = 1;
+                        cJSON *is_rocket = cJSON_GetObjectItem(action, "is_rocket");
+                        players[player_id].shot = (is_rocket && cJSON_IsTrue(is_rocket)) ? 2 : 1;
                     }
                 }
             }
@@ -239,6 +255,10 @@ unsigned __stdcall client_handler(void *args) {
             // Process hits
             cJSON *hit = cJSON_GetObjectItem(data, "hit");
             if(hit && hit->valueint) {
+                cJSON *is_rocket = cJSON_GetObjectItem(data, "is_rocket");
+                if(is_rocket && cJSON_IsTrue(is_rocket)) {
+                    players[player_id].shot = 2;
+                }
                 process_hit(player_id, other_id);
             }
         }

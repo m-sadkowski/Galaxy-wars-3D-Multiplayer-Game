@@ -8,3 +8,4 @@ class Sounds:
         self.shoot_sound = pg.mixer.Sound(self.path + 'turret.wav')
         self.damage_sound = pg.mixer.Sound(self.path + 'damage.wav')
         self.death_sound = pg.mixer.Sound(self.path + 'death.wav')
+        self.rocket_sound = pg.mixer.Sound(self.path + 'rocket.wav')
