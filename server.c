@@ -52,6 +52,8 @@ MapItem map_items[] = {
 };
 #define NUM_ITEMS (sizeof(map_items) / sizeof(MapItem))
 
+// Broadcasts
+
 void send_json(SOCKET sock, cJSON *json) {
     char *data = cJSON_PrintUnformatted(json);
     int len = strlen(data);
@@ -68,26 +70,6 @@ void broadcast_game_started() {
     }
 
     cJSON_Delete(msg);
-}
-
-void process_hit(int shooter_id, int target_id) {
-    WaitForSingleObject(mutex, INFINITE);
-
-    int is_rocket = players[shooter_id].shot == 2;
-    int damage = is_rocket ? 2 * DAMAGE : DAMAGE;
-
-    players[target_id].health -= damage;
-    hits[target_id] = 1;
-    printf("Player %d hit player %d for %d damage (%s)! Health remaining: %d\n",
-           shooter_id, target_id, damage,
-           is_rocket ? "rocket" : "normal",
-           players[target_id].health);
-
-    if(players[target_id].health <= 0) {
-        printf("Player %d defeated by player %d!\n", target_id, shooter_id);
-    }
-
-    ReleaseMutex(mutex);
 }
 
 void broadcast_disconnect(int disconnected_id) {
@@ -114,6 +96,28 @@ void broadcast_reconnect(int reconnected_id) {
     }
 
     cJSON_Delete(msg);
+}
+
+// Others
+
+void process_hit(int shooter_id, int target_id) {
+    WaitForSingleObject(mutex, INFINITE);
+
+    int is_rocket = players[shooter_id].shot == 2;
+    int damage = is_rocket ? 2 * DAMAGE : DAMAGE;
+
+    players[target_id].health -= damage;
+    hits[target_id] = 1;
+    printf("Player %d hit player %d for %d damage (%s)! Health remaining: %d\n",
+           shooter_id, target_id, damage,
+           is_rocket ? "rocket" : "normal",
+           players[target_id].health);
+
+    if(players[target_id].health <= 0) {
+        printf("Player %d defeated by player %d!\n", target_id, shooter_id);
+    }
+
+    ReleaseMutex(mutex);
 }
 
 void check_item_collection(int player_id) {
@@ -172,6 +176,8 @@ void check_item_collection(int player_id) {
 
     ReleaseMutex(mutex);
 }
+
+// Client handler
 
 unsigned __stdcall client_handler(void *args) {
     ClientArgs *client = (ClientArgs *)args;
