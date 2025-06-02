@@ -1,9 +1,9 @@
 import math
 
 # Game window
-RES = WIDTH, HEIGHT = 1920, 1080
-HALF_WIDTH = 960
-HALF_HEIGHT = 540
+RES = WIDTH, HEIGHT = 1920//2, 1080//2
+HALF_WIDTH = WIDTH // 2
+HALF_HEIGHT = HEIGHT // 2
 FPS = 120
 
 # Player
